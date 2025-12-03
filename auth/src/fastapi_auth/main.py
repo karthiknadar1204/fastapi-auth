@@ -1,8 +1,12 @@
 from fastapi import FastAPI
 import uvicorn
 from fastapi_auth.utils.init_db import create_tables
-
+from fastapi_auth.routers.auth import authRouter
 app = FastAPI()
+
+app.include_router(router=authRouter, tags=["auth"], prefix="/auth")
+# /auth/login
+# /auth/signup
 
 @app.get("/")
 def health_check():
