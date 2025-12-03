@@ -202,3 +202,169 @@ UserService(session=session).signup(user_details=signUpDetails)
 ```
 
 This is why `self` is the first parameter in instance methods: it receives the instance automatically.
+
+
+
+
+
+Clarifying: functions inside a class are not instances. They are methods that operate on instances. Here's the distinction:
+
+- The class is a blueprint (template).
+- An instance (object) is created from that blueprint.
+- Methods are functions attached to the class that operate on instances.
+
+Example:
+
+
+[1 tool called]
+
+
+## The distinction
+
+### 1. The class (blueprint)
+```python
+class UserService:  # ← This is the CLASS (blueprint/template)
+    def __init__(self, session):
+        ...
+    def signup(self, user_details):
+        ...
+    def login(self, login_details):
+        ...
+```
+
+`UserService` is the class definition. It's not an object yet.
+
+### 2. The instance (object)
+```python
+# In your router (auth.py line 20):
+UserService(session=session)  # ← This CREATES an INSTANCE (object)
+```
+
+When you write `UserService(session=session)`, Python:
+1. Creates a new instance (object)
+2. Calls `__init__` with that instance as `self`
+3. Returns the instance
+
+### 3. The methods (functions attached to the class)
+```python
+def signup(self, user_details):  # ← This is a METHOD (function inside class)
+    ...
+```
+
+Methods are functions defined in the class. They are not instances; they operate on instances.
+
+## Visual breakdown
+
+```python
+# 1. CLASS DEFINITION (blueprint)
+class UserService:
+    def signup(self, user_details):
+        return self.__userRepository.create_user(...)
+
+# 2. CREATE INSTANCE (object)
+my_service = UserService(session=my_session)
+#    ↑
+#    This is an INSTANCE (object)
+
+# 3. CALL METHOD ON INSTANCE
+my_service.signup(user_details=some_data)
+#    ↑           ↑
+#    instance    method (function)
+```
+
+## What `self` actually is
+
+`self` is the instance (object) that the method is called on.
+
+```python
+# When you do this:
+my_service = UserService(session=session)
+my_service.signup(user_details=data)
+
+# Python internally does:
+# 1. Creates instance: my_service = <UserService object at memory_address_123>
+# 2. Calls method: UserService.signup(my_service, data)
+# 3. Inside signup: self = my_service (the instance at memory_address_123)
+```
+
+## Real-world analogy
+
+Think of a car factory:
+
+```python
+class Car:  # ← The factory blueprint
+    def __init__(self, color):
+        self.color = color  # Each car has its own color
+    
+    def paint(self, new_color):  # ← Method (function)
+        self.color = new_color  # Changes THIS car's color
+
+# The CLASS is like the factory blueprint
+# The INSTANCE is like an actual car built from that blueprint
+# The METHOD is like an action you can perform on a car
+
+my_car = Car("red")    # ← INSTANCE (actual car object)
+your_car = Car("blue") # ← Different INSTANCE (different car object)
+
+my_car.paint("green")  # ← METHOD called on my_car instance
+# Inside paint: self = my_car (the red car that's now green)
+```
+
+## In your code
+
+```python
+# Line 20 in auth.py:
+UserService(session=session).signup(user_details=signUpDetails)
+# ↑                    ↑              ↑
+# Class name          Creates         Method called
+# (blueprint)         INSTANCE        on that instance
+```
+
+Breaking it down:
+
+```python
+# Step 1: Create instance
+service_instance = UserService(session=session)
+# service_instance is now an OBJECT (instance)
+# It has: service_instance.__userRepository = <UserRepository object>
+
+# Step 2: Call method on instance
+service_instance.signup(user_details=signUpDetails)
+# Inside signup: self = service_instance
+# So self.__userRepository = service_instance.__userRepository
+```
+
+## Methods vs instances
+
+```python
+class UserService:
+    def signup(self, user_details):
+        pass
+
+# The METHOD exists in the class definition
+print(UserService.signup)  # <function UserService.signup at 0x...>
+# ↑ This is a function, not an instance
+
+# The INSTANCE is created when you call the class
+instance = UserService(session=session)
+print(instance)  # <__main__.UserService object at 0x...>
+# ↑ This is an instance (object)
+
+# Methods are shared by all instances, but operate on specific instances
+instance1 = UserService(session=session1)
+instance2 = UserService(session=session2)
+
+# Both instances have the same signup method
+# But when called, self refers to the specific instance:
+instance1.signup(...)  # self = instance1
+instance2.signup(...)  # self = instance2
+```
+
+## Summary
+
+- Class = blueprint (e.g., `UserService`)
+- Instance = object created from the class (e.g., `UserService(session=session)`)
+- Method = function defined in the class (e.g., `signup`, `login`)
+- `self` = the instance the method is called on
+
+Methods are not instances. They are functions that operate on instances, and `self` refers to the specific instance being used.
